@@ -23,6 +23,9 @@ public class OverheadCameraFollow : MonoBehaviour
         // Calculate the desired position based on the player's position and the fixed offset
         Vector3 desiredPosition = player.position + offset;
 
+        // Move the camera on the X-axis based on mouse movement, maintaining top-down view
+        desiredPosition.x += mouseX * rotationSpeed;
+
         // Smoothly interpolate between the current camera position and the desired position
         Vector3 smoothedPosition = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed);
 
@@ -30,7 +33,7 @@ public class OverheadCameraFollow : MonoBehaviour
         transform.position = smoothedPosition;
 
         // Apply the rotation to the camera on the Y-axis (around the vertical axis)
-        transform.rotation = Quaternion.Euler(0, currentRotationX, 0);
+        transform.rotation = Quaternion.Euler(currentRotationX, 0, 0); // This will keep the camera's top-down view
 
         // Optionally, you can make the camera look at the player to keep them centered
         transform.LookAt(player);
