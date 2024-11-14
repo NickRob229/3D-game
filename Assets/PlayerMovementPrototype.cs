@@ -4,13 +4,20 @@ public class PlayerMovement : MonoBehaviour
 {
     public float moveSpeed = 5f;       // Normal movement speed
     public float sprintSpeed = 10f;    // Sprinting speed
-    public float rotationSpeed = 10f; // Smooth rotation speed
+    public float dashSpeed = 20f;      // Dash speed
+    public float dashDuration = 0.2f;  // Duration of the dash
+    public float dashCooldown = 1f;    // Time before the dash can be used again
+    public float rotationSpeed = 10f;  // Smooth rotation speed
     public float groundCheckDistance = 0.3f;  // Distance for ground checking
 
     private Rigidbody rb;
     private Camera cam;
 
     private Vector3 movementDirection;
+    private Vector3 dashDirection;      // The direction the player dashes towards
+    private bool isDashing = false;     // Whether the player is currently dashing
+    private float dashTime = 0f;        // Timer to keep track of dash duration
+    private float dashCooldownTime = 0f; // Timer to track cooldown between dashes
 
     private void Start()
     {
@@ -23,7 +30,13 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
-        // Get player input (WASD or arrow keys)
+        // Handle dash input (space key)
+        if (Input.GetKeyDown(KeyCode.Space) && dashCooldownTime <= 0f && !isDashing)
+        {
+            StartDash();
+        }
+
+        // Handle movement input (WASD or arrow keys)
         float moveX = Input.GetAxisRaw("Horizontal");
         float moveZ = Input.GetAxisRaw("Vertical");
 
@@ -49,15 +62,21 @@ public class PlayerMovement : MonoBehaviour
 
         // Rotate the player towards the movement direction
         RotatePlayer();
+
+        // Update dash state
+        UpdateDash();
     }
 
     private void MovePlayer()
     {
-        // Determine speed (whether sprinting or walking)
-        float speed = Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : moveSpeed;
+        // Determine the current speed (whether sprinting, normal, or dashing)
+        float speed = isDashing ? dashSpeed : (Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : moveSpeed);
 
-        // Update Rigidbody's velocity based on the movement direction and speed
-        rb.linearVelocity = new Vector3(movementDirection.x * speed, rb.linearVelocity.y, movementDirection.z * speed);
+        // If dashing, use the dash direction, otherwise use the regular movement input direction
+        Vector3 velocityDirection = isDashing ? dashDirection : movementDirection;
+
+        // Update Rigidbody's velocity based on the direction and speed
+        rb.linearVelocity = new Vector3(velocityDirection.x * speed, rb.linearVelocity.y, velocityDirection.z * speed);
 
         // Simple ground check to ensure the player is grounded and prevent falling over
         if (IsGrounded() && Mathf.Abs(rb.linearVelocity.y) < 0.1f)
@@ -79,6 +98,37 @@ public class PlayerMovement : MonoBehaviour
 
             // Smoothly rotate the player towards the target rotation
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+        }
+    }
+
+    private void StartDash()
+    {
+        isDashing = true;
+        dashTime = dashDuration;
+
+        // Get the direction the player is currently facing (relative to the camera)
+        dashDirection = transform.forward;
+
+        // Start the cooldown timer for the next dash
+        dashCooldownTime = dashCooldown;
+    }
+
+    private void UpdateDash()
+    {
+        if (isDashing)
+        {
+            dashTime -= Time.deltaTime;
+
+            // End the dash after the duration has passed
+            if (dashTime <= 0f)
+            {
+                isDashing = false;  // Stop the dash
+            }
+        }
+
+        if (dashCooldownTime > 0f)
+        {
+            dashCooldownTime -= Time.deltaTime; // Countdown the dash cooldown
         }
     }
 
