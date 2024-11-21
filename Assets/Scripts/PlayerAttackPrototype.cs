@@ -10,11 +10,14 @@ public class PlayerAttack : MonoBehaviour
     private float attackCooldownTimer = 0f; // Timer to track cooldown
 
     private ParticleSystem currentSlash; // To store the currently active slash
-    private Collider slashCollider; // Reference to the collider on the slash clone
+    private Collider playerCollider; // Reference to the player's collider
     private ParticleSystem slashClone; // Declare slashClone at the class level
 
-    private bool isAttacking = false; // Flag to track if the player is already attacking
-    private bool canAttack = true; // Flag to track if the player can attack (after cooldown)
+    private void Start()
+    {
+        // Get the player's collider (assuming it's the parent of the Slash8 GameObject)
+        playerCollider = GetComponent<Collider>();
+    }
 
     private void Update()
     {
@@ -24,24 +27,17 @@ public class PlayerAttack : MonoBehaviour
             attackCooldownTimer -= Time.deltaTime;
         }
 
-        // Only allow attacking if the cooldown has passed, and the player is allowed to attack
-        if (Input.GetMouseButtonDown(0) && canAttack && !isAttacking)
+        // Trigger attack on left mouse button click if the cooldown has passed
+        if (Input.GetMouseButtonDown(0) && attackCooldownTimer <= 0f)
         {
             PerformAttack();
             attackCooldownTimer = attackCooldown; // Reset the cooldown timer after an attack
-            isAttacking = true; // Flag that an attack is ongoing
-            canAttack = false; // Prevent further attacks until the cooldown is over
-        }
-
-        // If the cooldown timer is finished, allow for another attack
-        if (attackCooldownTimer <= 0f)
-        {
-            canAttack = true;
         }
 
         // If the slash is playing, update its position to match the player's position
         if (currentSlash != null && currentSlash.isPlaying)
         {
+            // Update the position of the slash clone to match the slash origin
             currentSlash.transform.position = slashOrigin.position;
             currentSlash.transform.rotation = slashOrigin.rotation;
         }
@@ -60,19 +56,8 @@ public class PlayerAttack : MonoBehaviour
             // Play the effect for the specified duration
             slashClone.Play();
 
-            // Add a collider to the slash clone to detect collisions
-            slashCollider = slashClone.gameObject.AddComponent<BoxCollider>();
-            slashCollider.isTrigger = true; // Make it a trigger to detect collisions without physics
-
-            // Set the collider size and position to match the slash area
-            slashCollider.transform.position = slashOrigin.position;
-            slashCollider.transform.rotation = slashOrigin.rotation;
-
             // Destroy the clone after the slash duration to stop it from lingering
             Destroy(slashClone.gameObject, slashDuration);
-
-            // Disable the collider once the slash effect is done
-            Invoke("DisableCollider", slashDuration);
         }
         else
         {
@@ -83,19 +68,7 @@ public class PlayerAttack : MonoBehaviour
         currentSlash = slashClone;
     }
 
-    private void DisableCollider()
-    {
-        // Disable the collider after the slash effect is done
-        if (slashCollider != null)
-        {
-            slashCollider.enabled = false;
-        }
-
-        // Reset the attacking flag so that the player can attack again
-        isAttacking = false;
-    }
-
-    // Collision detection method
+    // Collision detection method (detecting with the player's collider)
     private void OnTriggerEnter(Collider other)
     {
         // If the slash collides with the enemy
@@ -110,6 +83,15 @@ public class PlayerAttack : MonoBehaviour
             {
                 enemyHealth.TakeDamage(slashDamage); // Apply damage to the enemy
             }
+        }
+    }
+
+    // Optional: You can call this method to disable the collider if necessary, but using the player's collider should suffice.
+    private void DisableCollider()
+    {
+        if (playerCollider != null)
+        {
+            playerCollider.enabled = false; // Temporarily disable the player's collider if needed
         }
     }
 }
