@@ -3,12 +3,12 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     public float moveSpeed = 5f;       // Normal movement speed
-    public float sprintSpeed = 10f;    // Sprinting speed
-    public float dashSpeed = 20f;      // Dash speed
-    public float dashDuration = 0.2f;  // Duration of the dash
-    public float dashCooldown = 1f;    // Time before the dash can be used again
-    public float rotationSpeed = 10f;  // Smooth rotation speed
-    public float groundCheckDistance = 0.3f;  // Distance for ground checking
+    public float sprintSpeed = 10f;   // Sprinting speed
+    public float dashSpeed = 20f;     // Dash speed
+    public float dashDuration = 0.2f; // Duration of the dash
+    public float dashCooldown = 1f;   // Time before the dash can be used again
+    public float rotationSpeed = 10f; // Smooth rotation speed
+    public float groundCheckDistance = 0.3f; // Distance for ground checking
 
     private Rigidbody rb;
     private Camera cam;
@@ -44,13 +44,13 @@ public class PlayerMovement : MonoBehaviour
         Vector3 forward = cam.transform.forward;
         Vector3 right = cam.transform.right;
 
-        // Remove any Y-axis component of the forward and right vectors to avoid unintended tilt
+        // Remove any Y-axis component of the forward and right vectors
         forward.y = 0f;
         right.y = 0f;
         forward.Normalize();
         right.Normalize();
 
-        // Combine the forward and right vectors with player input
+        // Combine forward and right vectors with player input
         movementDirection = forward * moveZ + right * moveX;
 
         // Normalize movement direction to prevent faster diagonal movement
@@ -60,8 +60,8 @@ public class PlayerMovement : MonoBehaviour
         // Move the player (velocity-based movement)
         MovePlayer();
 
-        // Rotate the player towards the movement direction
-        RotatePlayer();
+        // Rotate the player to face the mouse pointer
+        RotateToMouse();
 
         // Update dash state
         UpdateDash();
@@ -72,32 +72,33 @@ public class PlayerMovement : MonoBehaviour
         // Determine the current speed (whether sprinting, normal, or dashing)
         float speed = isDashing ? dashSpeed : (Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : moveSpeed);
 
-        // If dashing, use the dash direction, otherwise use the regular movement input direction
+        // If dashing, use the dash direction; otherwise, use movement input
         Vector3 velocityDirection = isDashing ? dashDirection : movementDirection;
 
-        // Update Rigidbody's velocity based on the direction and speed
+        // Update Rigidbody's velocity
         rb.linearVelocity = new Vector3(velocityDirection.x * speed, rb.linearVelocity.y, velocityDirection.z * speed);
-
-        // Simple ground check to ensure the player is grounded and prevent falling over
-        if (IsGrounded() && Mathf.Abs(rb.linearVelocity.y) < 0.1f)
-        {
-            // Correct the player's rotation to stand upright if on the ground
-            if (transform.rotation != Quaternion.identity)
-            {
-                transform.rotation = Quaternion.identity;
-            }
-        }
     }
 
-    private void RotatePlayer()
+    private void RotateToMouse()
     {
-        if (movementDirection.magnitude > 0.1f)
-        {
-            // Calculate the desired rotation (only on the Y-axis)
-            Quaternion targetRotation = Quaternion.LookRotation(movementDirection);
+        // Cast a ray from the camera to the mouse position
+        Ray ray = cam.ScreenPointToRay(Input.mousePosition);
 
-            // Smoothly rotate the player towards the target rotation
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+        // Detect the ground or plane
+        if (Physics.Raycast(ray, out RaycastHit hitInfo))
+        {
+            Vector3 targetPosition = hitInfo.point; // Mouse hit position
+            Vector3 direction = (targetPosition - transform.position).normalized;
+
+            // Ignore Y-axis for rotation
+            direction.y = 0f;
+
+            if (direction.magnitude > 0.1f)
+            {
+                // Calculate and smoothly rotate to the target direction
+                Quaternion targetRotation = Quaternion.LookRotation(direction);
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+            }
         }
     }
 
@@ -106,10 +107,10 @@ public class PlayerMovement : MonoBehaviour
         isDashing = true;
         dashTime = dashDuration;
 
-        // Get the direction the player is currently facing (relative to the camera)
+        // Get the direction the player is facing
         dashDirection = transform.forward;
 
-        // Start the cooldown timer for the next dash
+        // Start dash cooldown
         dashCooldownTime = dashCooldown;
     }
 
@@ -119,22 +120,22 @@ public class PlayerMovement : MonoBehaviour
         {
             dashTime -= Time.deltaTime;
 
-            // End the dash after the duration has passed
+            // End the dash after the duration
             if (dashTime <= 0f)
             {
-                isDashing = false;  // Stop the dash
+                isDashing = false;
             }
         }
 
         if (dashCooldownTime > 0f)
         {
-            dashCooldownTime -= Time.deltaTime; // Countdown the dash cooldown
+            dashCooldownTime -= Time.deltaTime;
         }
     }
 
     private bool IsGrounded()
     {
-        // Perform a simple raycast downward to check if the player is grounded
+        // Perform a raycast downward to check if the player is grounded
         return Physics.Raycast(transform.position, Vector3.down, groundCheckDistance);
     }
 }
