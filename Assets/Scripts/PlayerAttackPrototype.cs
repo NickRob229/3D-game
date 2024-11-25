@@ -2,42 +2,41 @@ using UnityEngine;
 
 public class PlayerAttack : MonoBehaviour
 {
+    public Collider hitboxCollider; // Assign the hitbox (CapsuleCollider) in the Inspector
     public ParticleSystem slashVFXPrefab; // Drag your Particle System prefab here
-    public Transform slashOrigin;  // The position and rotation where the slash starts (e.g., near the sword)
-    public float slashDuration = 1f;  // Duration for the slash effect to play (in seconds)
-    public float slashDamage = 10f; // Damage dealt by the slash
-    public float attackCooldown = 0.5f; // Cooldown duration between attacks (in seconds)
-    private float attackCooldownTimer = 0f; // Timer to track cooldown
+    public Transform slashOrigin; // Position and rotation for the VFX (e.g., near the sword)
+    public float attackDuration = 0.5f; // Duration for which the hitbox is active
+    public float attackCooldown = 1f; // Cooldown duration between attacks
+    private float attackCooldownTimer = 0f;
 
-    private ParticleSystem currentSlash; // To store the currently active slash
-    private Collider playerCollider; // Reference to the player's collider
-    private ParticleSystem slashClone; // Declare slashClone at the class level
+    private ParticleSystem currentSlash; // To track the active VFX instance
 
     private void Start()
     {
-        // Get the player's collider (assuming it's the parent of the Slash8 GameObject)
-        playerCollider = GetComponent<Collider>();
+        if (hitboxCollider != null)
+        {
+            hitboxCollider.enabled = false; // Ensure the hitbox is initially disabled
+        }
     }
 
     private void Update()
     {
-        // Decrease the cooldown timer as time passes
+        // Decrease cooldown timer
         if (attackCooldownTimer > 0f)
         {
             attackCooldownTimer -= Time.deltaTime;
         }
 
-        // Trigger attack on left mouse button click if the cooldown has passed
+        // Trigger attack if left mouse button is clicked and cooldown is over
         if (Input.GetMouseButtonDown(0) && attackCooldownTimer <= 0f)
         {
             PerformAttack();
-            attackCooldownTimer = attackCooldown; // Reset the cooldown timer after an attack
+            attackCooldownTimer = attackCooldown; // Reset cooldown timer
         }
 
-        // If the slash is playing, update its position to match the player's position
+        // Update VFX position if it's playing
         if (currentSlash != null && currentSlash.isPlaying)
         {
-            // Update the position of the slash clone to match the slash origin
             currentSlash.transform.position = slashOrigin.position;
             currentSlash.transform.rotation = slashOrigin.rotation;
         }
@@ -45,53 +44,39 @@ public class PlayerAttack : MonoBehaviour
 
     private void PerformAttack()
     {
+        if (hitboxCollider != null)
+        {
+            // Activate hitbox for the attack duration
+            hitboxCollider.enabled = true;
+            Invoke(nameof(DisableHitbox), attackDuration);
+        }
+
+        // Play slash VFX
         if (slashVFXPrefab != null)
         {
-            // Create a clone of the slash effect at the slash origin position
-            slashClone = Instantiate(slashVFXPrefab, slashOrigin.position, slashOrigin.rotation);
+            // Instantiate the VFX at the slash origin
+            currentSlash = Instantiate(slashVFXPrefab, slashOrigin.position, slashOrigin.rotation);
 
-            // Stop it immediately to prevent automatic looping (if Play On Awake is enabled in the prefab)
-            slashClone.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            // Stop it immediately to prevent automatic looping (if "Play On Awake" is enabled)
+            currentSlash.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
 
-            // Play the effect for the specified duration
-            slashClone.Play();
+            // Play the VFX for the duration of the attack
+            currentSlash.Play();
 
-            // Destroy the clone after the slash duration to stop it from lingering
-            Destroy(slashClone.gameObject, slashDuration);
+            // Destroy the VFX after the attack duration
+            Destroy(currentSlash.gameObject, attackDuration);
         }
         else
         {
             Debug.LogWarning("Slash VFX Prefab is not assigned in the PlayerAttack script!");
         }
-
-        // Store the current slash to track its position
-        currentSlash = slashClone;
     }
 
-    // Collision detection method (detecting with the player's collider)
-    private void OnTriggerEnter(Collider other)
+    private void DisableHitbox()
     {
-        // If the slash collides with the enemy
-        if (other.CompareTag("Enemy")) // Make sure your enemy has the "Enemy" tag
+        if (hitboxCollider != null)
         {
-            // Debug log to confirm collision with the enemy
-            Debug.Log("Slash hit an enemy: " + other.name);
-
-            // Call the TakeDamage method on the enemy (make sure your enemy has this script)
-            EnemyHealth enemyHealth = other.GetComponent<EnemyHealth>();
-            if (enemyHealth != null)
-            {
-                enemyHealth.TakeDamage(slashDamage); // Apply damage to the enemy
-            }
-        }
-    }
-
-    // Optional: You can call this method to disable the collider if necessary, but using the player's collider should suffice.
-    private void DisableCollider()
-    {
-        if (playerCollider != null)
-        {
-            playerCollider.enabled = false; // Temporarily disable the player's collider if needed
+            hitboxCollider.enabled = false;
         }
     }
 }

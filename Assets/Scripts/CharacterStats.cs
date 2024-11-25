@@ -3,9 +3,9 @@ using UnityEngine;
 public class CharacterStats : MonoBehaviour
 {
     public int maxHealth = 100;
-    private int currentHealth;
+    public int currentHealth;
 
-    void Start()
+    private void Start()
     {
         currentHealth = maxHealth; // Initialize health
     }
@@ -13,17 +13,18 @@ public class CharacterStats : MonoBehaviour
     public void TakeDamage(int damage)
     {
         currentHealth -= damage;
-        Debug.Log($"{gameObject.name} took {damage} damage! Current Health: {currentHealth}");
+
+        if (currentHealth < 0)
+        {
+            currentHealth = 0; // Prevent health from dropping below zero
+        }
+
+        Debug.Log($"{gameObject.name} took {damage} damage, current health: {currentHealth}");
 
         if (currentHealth <= 0)
         {
-            Die();
+            // Notify Hurtbox (or other scripts) to handle death
+            SendMessage("HandleDeath", SendMessageOptions.DontRequireReceiver);
         }
-    }
-
-    private void Die()
-    {
-        Debug.Log($"{gameObject.name} has died!");
-        // Handle death (e.g., disable character, play animation)
     }
 }

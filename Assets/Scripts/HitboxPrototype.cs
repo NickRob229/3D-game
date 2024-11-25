@@ -13,7 +13,6 @@ public class Hitbox : MonoBehaviour
             if (hurtbox != null)
             {
                 // Apply damage through the Hurtbox's logic.
-                Debug.Log($"Hit {other.name} for {damage} damage!");
             }
         }
     }
