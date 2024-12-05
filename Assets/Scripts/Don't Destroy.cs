@@ -1,16 +1,18 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
-public class Don'tDestroy : MonoBehaviour
+public class DontDestroy : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    void Awake()
     {
-        
-    }
+        GameObject[] objs = GameObject.FindGameObjectsWithTag("Music");
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+        if (objs.Length > 1)
+        {
+            Destroy(this.gameObject);
+        }
+
+        DontDestroyOnLoad(this.gameObject);
     }
 }

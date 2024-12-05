@@ -5,6 +5,7 @@ public class EnemyAttack : MonoBehaviour
     public Collider hitboxCollider; // Assign the hitbox (Collider) in the Inspector
     public ParticleSystem slashVFXPrefab; // Drag your Particle System prefab here
     public Transform slashOrigin; // Position and rotation for the VFX (e.g., near the sword)
+    public Animator swordAnimator; // Reference to the Animator on the sword
     public float attackDuration = 0.5f; // Duration for which the hitbox is active
     public float attackInterval = 1f; // Interval between automatic attacks
     private float attackTimer = 0f;
@@ -13,6 +14,11 @@ public class EnemyAttack : MonoBehaviour
 
     private void Start()
     {
+        if (swordAnimator == null)
+        {
+            Debug.LogError("Sword Animator is not assigned! Please assign it in the Inspector.");
+        }
+
         if (hitboxCollider != null)
         {
             hitboxCollider.enabled = false; // Ensure the hitbox is initially disabled
@@ -41,6 +47,12 @@ public class EnemyAttack : MonoBehaviour
 
     private void PerformAttack()
     {
+        // Trigger attack animation on the sword
+        if (swordAnimator != null)
+        {
+            swordAnimator.SetTrigger("Attack"); // Assumes an "Attack" trigger is set up in the Animator
+        }
+
         if (hitboxCollider != null)
         {
             // Activate hitbox for the attack duration
