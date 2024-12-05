@@ -71,7 +71,7 @@ public class PlayerAttack : MonoBehaviour
             Debug.LogWarning("Slash VFX Prefab is not assigned in the PlayerAttack script!");
         }
     }
-
+    
     private void DisableHitbox()
     {
         if (hitboxCollider != null)
