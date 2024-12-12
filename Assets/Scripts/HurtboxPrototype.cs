@@ -5,6 +5,9 @@ public class Hurtbox : MonoBehaviour
     public CharacterStats characterStats; // Reference to the character's health or stats
     private bool canTakeDamage = true; // Prevent multiple damage triggers
     public float damageCooldown = 0.5f; // Cooldown time between damage applications
+    public bool isPlayer; // Set to true if this hurtbox belongs to the player
+    public SceneChanger sceneChanger; // Reference to SceneChanger for player death handling
+    public string deathSceneName = "DeathScreen"; // Name of the death screen scene
 
     private void OnTriggerEnter(Collider other)
     {
@@ -38,6 +41,23 @@ public class Hurtbox : MonoBehaviour
     private void HandleDeath()
     {
         Debug.Log($"{gameObject.name} has died!");
-        Destroy(transform.parent.gameObject); // Destroy the enemy (parent object)
+
+        if (isPlayer)
+        {
+            // Player-specific death handling
+            if (sceneChanger != null)
+            {
+                sceneChanger.ChangeScene(deathSceneName);
+            }
+            else
+            {
+                Debug.LogError("SceneChanger not assigned!");
+            }
+        }
+        else
+        {
+            // Enemy-specific death handling
+            Destroy(transform.parent.gameObject); // Destroy the enemy (parent object)
+        }
     }
 }

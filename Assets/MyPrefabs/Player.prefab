@@ -70,6 +70,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   characterStats: {fileID: 1171667461774430316}
   damageCooldown: 0.5
+  isPlayer: 1
+  sceneChanger: {fileID: 0}
+  deathSceneName: DeathScreen
 --- !u!1 &3027154884405137142
 GameObject:
   m_ObjectHideFlags: 0
