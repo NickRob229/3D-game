@@ -40,11 +40,34 @@ public class Hitbox : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        // Visualize the hitbox in the editor
-        Gizmos.color = Color.red;
-        if (hitboxCollider != null && hitboxCollider is BoxCollider boxCollider)
+        if (hitboxCollider != null && hitboxCollider is CapsuleCollider capsuleCollider)
         {
-            Gizmos.DrawWireCube(boxCollider.bounds.center, boxCollider.size);
+            // Set Gizmo color
+            Gizmos.color = Color.red;
+
+            // Get the world-space center of the CapsuleCollider
+            Vector3 center = capsuleCollider.transform.TransformPoint(capsuleCollider.center);
+
+            // Get radius and height of the capsule
+            float radius = capsuleCollider.radius;
+            float height = Mathf.Max(0, capsuleCollider.height - 2 * radius);
+
+            // Get the direction of the capsule based on its orientation
+            Vector3 upDirection = capsuleCollider.transform.up;
+
+            // Calculate the top and bottom sphere positions
+            Vector3 topSphere = center + upDirection * (height / 2);
+            Vector3 bottomSphere = center - upDirection * (height / 2);
+
+            // Draw the capsule in Scene view
+            Gizmos.DrawWireSphere(topSphere, radius);  // Top sphere
+            Gizmos.DrawWireSphere(bottomSphere, radius);  // Bottom sphere
+
+            // Draw lines to simulate the cylindrical body
+            Gizmos.DrawLine(topSphere + capsuleCollider.transform.right * radius, bottomSphere + capsuleCollider.transform.right * radius);
+            Gizmos.DrawLine(topSphere - capsuleCollider.transform.right * radius, bottomSphere - capsuleCollider.transform.right * radius);
+            Gizmos.DrawLine(topSphere + capsuleCollider.transform.forward * radius, bottomSphere + capsuleCollider.transform.forward * radius);
+            Gizmos.DrawLine(topSphere - capsuleCollider.transform.forward * radius, bottomSphere - capsuleCollider.transform.forward * radius);
         }
     }
 }
