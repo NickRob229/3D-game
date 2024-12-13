@@ -57,6 +57,7 @@ public class Hurtbox : MonoBehaviour
         else
         {
             // Enemy-specific death handling
+            EnemyCounter.Instance?.IncrementKillCount(); // Increment the kill count
             Destroy(transform.parent.gameObject); // Destroy the enemy (parent object)
         }
     }
